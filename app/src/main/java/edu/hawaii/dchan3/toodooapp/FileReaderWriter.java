@@ -1,11 +1,16 @@
 package com.example.brianm.hackathon2016;
 
 
+import android.util.JsonReader;
+import android.util.JsonToken;
 import android.util.JsonWriter;
 
-import java.io.FileNotFoundException;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
@@ -23,6 +28,8 @@ public class FileReaderWriter {
 
         testList.add(testobj);
 
+        File testfile = new File("test.json");
+
         FileOutputStream file = new FileOutputStream("test.json");
 
         try {
@@ -30,6 +37,10 @@ public class FileReaderWriter {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        FileInputStream in = new FileInputStream(testfile);
+
+        readJsonStream(in);
     }
 
     public void writeJsonStream(OutputStream out, List<yObject> messages)throws IOException {
@@ -92,4 +103,88 @@ public class FileReaderWriter {
     }
 
 
-}
+    //CODE FOR READING BELOW*****
+
+    public List readJsonStream(InputStream in) throws IOException {
+        JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
+        try {
+            return readMessagesArray(reader);
+
+        } finally{
+            reader.close();
+        }
+
+    }
+
+    public List readMessagesArray(JsonReader reader) throws IOException {
+
+        List messages = new ArrayList();
+
+        reader.beginArray();
+        while (reader.hasNext()) {
+            messages.add(readMessage(reader));
+        }
+        reader.endArray();
+        return messages;
+    }
+
+    public yObject readMessage(JsonReader reader) throws IOException {
+        long nid = -1;
+        String id = null;
+        //User user = null; //from tut
+        String position = null;
+        String address = null;
+
+        reader.beginObject();
+
+        while (reader.hasNext()) {
+            String name = reader.nextName();
+
+            if (name.equals("nid")) {
+                nid = reader.nextLong();
+            } else if (name.equals("id")) {
+                id = reader.nextString();
+            } else if (name.equals("position") && reader.peek() != JsonToken.NULL) {
+                position = reader.nextString();
+            } else if (name.equals("address")) {
+                address = reader.nextString();
+            } else {
+                reader.skipValue();
+            }
+        }
+        reader.endObject();
+        return new yObject(nid, id, position, address);
+    }
+
+    public List readDoublesArray(JsonReader reader) throws IOException {
+        List doubles = new ArrayList();
+
+        reader.beginArray();
+        while (reader.hasNext()) {
+            doubles.add(reader.nextDouble());
+        }
+        reader.endArray();
+        return doubles;
+    }
+
+    /**
+    public User readUser(JsonReader reader) throws IOException {
+        String username = null;
+        int followersCount = -1;
+
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String name = reader.nextName();
+            if (name.equals("name")) {
+                username = reader.nextString();
+            } else if (name.equals("followers_count")) {
+                followersCount = reader.nextInt();
+            } else {
+                reader.skipValue();
+            }
+        }
+        reader.endObject();
+        return new User(username, followersCount);
+    }
+     */
+    }
